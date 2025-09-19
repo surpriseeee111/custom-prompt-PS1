@@ -14,6 +14,7 @@ function load_default_colors() {
     export PROMPT_SYMBOL_COLOR="${WHITE}"
     export PROMPT_TIME_COLOR="${PURPLE}"
     export PROMPT_EXIT_CODE_COLOR="${RED}"
+    export PROMPT_VENV_COLOR="${YELLOW}"
 }
 
 # Function to load theme colors
@@ -33,6 +34,7 @@ function load_theme_colors() {
             export PROMPT_SYMBOL_COLOR="${CYAN}"
             export PROMPT_TIME_COLOR="${BLUE}"
             export PROMPT_EXIT_CODE_COLOR="${RED}"
+            export PROMPT_VENV_COLOR="${CYAN}"
             ;;
         forest)
             export PROMPT_USER_COLOR="${GREEN}"
@@ -43,6 +45,7 @@ function load_theme_colors() {
             export PROMPT_SYMBOL_COLOR="${GREEN}"
             export PROMPT_TIME_COLOR="${YELLOW}"
             export PROMPT_EXIT_CODE_COLOR="${RED}"
+            export PROMPT_VENV_COLOR="${GREEN}"
             ;;
         minimal)
             export PROMPT_USER_COLOR="${WHITE}"
@@ -53,6 +56,7 @@ function load_theme_colors() {
             export PROMPT_SYMBOL_COLOR="${WHITE}"
             export PROMPT_TIME_COLOR="${WHITE}"
             export PROMPT_EXIT_CODE_COLOR="${WHITE}"
+            export PROMPT_VENV_COLOR="${WHITE}"
             ;;
         dracula)
             export PROMPT_USER_COLOR="${PURPLE}"
@@ -63,6 +67,7 @@ function load_theme_colors() {
             export PROMPT_SYMBOL_COLOR="${PURPLE}"
             export PROMPT_TIME_COLOR="${BLUE}"
             export PROMPT_EXIT_CODE_COLOR="${RED}"
+            export PROMPT_VENV_COLOR="${PURPLE}"
             ;;
         *)
             echo "Unknown theme: $theme. Using default."
@@ -71,6 +76,7 @@ function load_theme_colors() {
     esac
 }
 
+# Rest of the file remains the same...
 # Function to list available themes
 function list_themes() {
     echo "Available themes:"

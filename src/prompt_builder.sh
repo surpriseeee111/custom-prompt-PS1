@@ -42,6 +42,14 @@ function build_prompt() {
     local last_exit_code=$?
     local prompt=""
 
+    # Virtual environment (shown first if present)
+    if [[ $(get_config SHOW_VIRTUALENV) == "true" ]]; then
+        local venv_info=$(get_virtualenv_info)
+        if [[ -n "$venv_info" ]]; then
+            prompt+="${PROMPT_VENV_COLOR}${venv_info}${RESET} "
+        fi
+    fi
+
     # Time
     if [[ $(get_config SHOW_TIME) == "true" ]]; then
         prompt+="${PROMPT_TIME_COLOR}[\\t]${RESET} "
@@ -97,7 +105,7 @@ function build_prompt() {
         prompt+=" ${PROMPT_EXIT_CODE_COLOR}[${last_exit_code}]${RESET}"
     fi
 
-    # Prompt symbol ($ for user, # for root) - using simple dollar sign
+    # Prompt symbol ($ for user, # for root)
     if [[ $EUID -eq 0 ]]; then
         prompt+=" ${PROMPT_SYMBOL_COLOR}#${RESET} "
     else
