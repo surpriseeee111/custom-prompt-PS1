@@ -6,21 +6,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_DIR="${HOME}/.custom-prompt"
 COMMANDS_DIR="${SCRIPT_DIR}/commands"
 
-# Source the prompt functions if installed (suppress output)
+# Load the prompt system to ensure functions are available
 if [[ -f "$PROMPT_DIR/loader.sh" ]]; then
-    CUSTOM_PROMPT_LOADED=1  # Prevent message
-    source "$PROMPT_DIR/loader.sh" 2>/dev/null
-fi
-
-# Source command files if they exist (they will reuse loaded functions)
-if [[ -f "$COMMANDS_DIR/theme.sh" ]]; then
-    CUSTOM_PROMPT_LOADED=1  # Ensure no message
-    source "$COMMANDS_DIR/theme.sh"
-fi
-
-if [[ -f "$COMMANDS_DIR/config.sh" ]]; then
-    CUSTOM_PROMPT_LOADED=1  # Ensure no message
-    source "$COMMANDS_DIR/config.sh"
+    # Source all components to ensure functions work
+    source "$PROMPT_DIR/colors.sh"
+    source "$PROMPT_DIR/os_detect.sh"
+    source "$PROMPT_DIR/git_info.sh"
+    source "$PROMPT_DIR/git_status.sh"
+    source "$PROMPT_DIR/virtualenv.sh"
+    source "$PROMPT_DIR/config.sh"
+    source "$PROMPT_DIR/color_config.sh"
+    source "$PROMPT_DIR/prompt_builder.sh"
 fi
 
 # Colors for output
@@ -91,10 +87,8 @@ function cmd_uninstall() {
     echo
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # Remove installation directory
         rm -rf "$PROMPT_DIR"
 
-        # Remove from RC files
         for rc_file in ~/.bashrc ~/.bash_profile ~/.zshrc; do
             if [[ -f "$rc_file" ]]; then
                 sed -i.bak '/# Custom Prompt PS1/,/^fi$/d' "$rc_file" 2>/dev/null || \
@@ -185,36 +179,103 @@ case "$1" in
         ;;
     config)
         shift
-        if type config_command &>/dev/null; then
-            config_command "$@"
-        else
-            print_error "Config command not found"
-            exit 1
-        fi
+        subcommand=$1
+        shift
+        case "$subcommand" in
+            list)
+                echo "Current Configuration:"
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                for key in SHOW_GIT SHOW_USER SHOW_HOST SHOW_PATH SHOW_TIME SHOW_EXIT_CODE SHOW_VIRTUALENV PATH_STYLE THEME GIT_SHOW_STATUS; do
+                    value=$(get_config $key)
+                    printf "  %-20s : %s\n" "$key" "$value"
+                done
+                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                ;;
+            get)
+                if [[ -n "$1" ]]; then
+                    value=$(get_config "$1")
+                    echo "$1 = $value"
+                else
+                    print_error "Usage: prompt-cli config get <key>"
+                fi
+                ;;
+            set)
+                if [[ -n "$1" ]] && [[ -n "$2" ]]; then
+                    set_config "$1" "$2"
+                    print_info "Set $1 = $2"
+                    echo "Run 'reload_prompt' to apply changes"
+                else
+                    print_error "Usage: prompt-cli config set <key> <value>"
+                fi
+                ;;
+            *)
+                echo "Usage: prompt-cli config [list|get|set]"
+                ;;
+        esac
         ;;
     theme)
         shift
-        if type theme_command &>/dev/null; then
-            theme_command "$@"
-        else
-            print_error "Theme command not found"
-            exit 1
-        fi
+        subcommand=$1
+        shift
+        case "$subcommand" in
+            list)
+                echo "Available themes:"
+                echo "  • default  - Classic colors"
+                echo "  • ocean    - Blue/cyan theme"
+                echo "  • forest   - Green theme"
+                echo "  • minimal  - Monochrome"
+                echo "  • dracula  - Purple/dark theme"
+                echo ""
+                echo "Current theme: $(get_config THEME)"
+                ;;
+            set)
+                if [[ -n "$1" ]]; then
+                    case "$1" in
+                        default|ocean|forest|minimal|dracula)
+                            set_config THEME "$1"
+                            load_theme_colors "$1"
+                            print_info "Theme set to: $1"
+                            echo "Theme applied!"
+
+                            # CRITICAL: Force prompt redraw by writing theme info to parent shell
+                            # This creates a file that the parent shell can read
+                            echo "$1" > /tmp/prompt-theme-change-$$
+
+                            # Tell user to press Enter to see changes
+                            echo ""
+                            echo "Open new terminal to see the new theme..."
+                            ;;
+                        *)
+                            print_error "Unknown theme: $1"
+                            echo "Available themes: default, ocean, forest, minimal, dracula"
+                            ;;
+                    esac
+                else
+                    print_error "Usage: prompt-cli theme set <theme>"
+                fi
+                ;;
+            preview)
+                theme="${1:-default}"
+                case "$theme" in
+                    default|ocean|forest|minimal|dracula)
+                        echo "Preview of '$theme' theme:"
+                        preview_theme "$theme"
+                        ;;
+                    *)
+                        print_error "Unknown theme: $theme"
+                        ;;
+                esac
+                ;;
+            *)
+                echo "Usage: prompt-cli theme [list|set|preview]"
+                ;;
+        esac
         ;;
     version|--version|-v)
         cmd_version
         ;;
     help|--help|-h|"")
         show_help
-        ;;
-    update)
-        if [[ -f "$COMMANDS_DIR/update.sh" ]]; then
-            source "$COMMANDS_DIR/update.sh"
-            update_prompt
-        else
-            print_warning "Update command not found"
-            print_info "Manually update by running install.sh from the repository"
-        fi
         ;;
     *)
         print_error "Unknown command: $1"
