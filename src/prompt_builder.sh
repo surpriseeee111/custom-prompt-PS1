@@ -6,32 +6,26 @@ function get_terminal_width() {
     echo "${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}"
 }
 
-# Function to calculate prompt length (without color codes)
-function get_prompt_length() {
-    local prompt="$1"
-    # Remove all ANSI escape sequences
-    local stripped=$(echo -e "$prompt" | sed 's/\\\[\\033\[[^m]*m\\\]//g' | sed 's/\\033\[[^m]*m//g' | sed 's/\\\[//g' | sed 's/\\\]//g')
-    # Remove special bash escapes
-    stripped=$(echo "$stripped" | sed 's/\\[uth]//g' | sed 's/\\W//g' | sed 's/\\w/~\/path/g' | sed 's/\\\$//g')
-    echo "${#stripped}"
+# Function to truncate path if needed
+function truncate_path() {
+    local path="$1"
+    local max_length="$2"
+
+    if [[ ${#path} -gt $max_length ]]; then
+        # Truncate from the beginning and add ...
+        local truncated="...${path: -$((max_length-3))}"
+        echo "$truncated"
+    else
+        echo "$path"
+    fi
 }
 
-# Function to create dynamic separator line
-function create_separator_line() {
-    local prompt_content="$1"
-    local term_width=$(get_terminal_width)
-    local prompt_length=$(get_prompt_length "$prompt_content")
-
-    # Calculate remaining space for separator
-    local remaining=$((term_width - prompt_length - 1))
-
-    # Create the separator
-    local separator=""
-    if [[ $remaining -gt 0 ]]; then
-        separator=$(printf '─%.0s' $(seq 1 $remaining))
-    fi
-
-    echo "$separator"
+# Function to calculate real prompt length
+function calculate_real_length() {
+    local text="$1"
+    # Strip ANSI codes and count actual characters
+    local stripped=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\\\[//g' | sed 's/\\\]//g')
+    echo ${#stripped}
 }
 
 # Function to get formatted path
@@ -44,7 +38,6 @@ function get_prompt_path() {
             current_path="\\W"
             ;;
         short)
-            # Show ~ for home and truncate deep paths
             current_path="\\w"
             ;;
         full|*)
@@ -55,67 +48,130 @@ function get_prompt_path() {
     echo "$current_path"
 }
 
+# Function to get actual PWD for display
+function get_display_pwd() {
+    local pwd_path="$PWD"
+    # Replace home with ~
+    pwd_path="${pwd_path/#$HOME/~}"
+    echo "$pwd_path"
+}
+
 # Function to build the prompt (two-line version)
 function build_prompt() {
     local last_exit_code=$?
     local line1=""
     local line2=""
 
-    # Build first line content
-    local line1_content=""
+    # Build ALL fixed content first to calculate proper length
+    local fixed_content=""
 
     # Opening bracket/decorator
-    line1_content="${PROMPT_SYMBOL_COLOR}┌─${RESET}"
+    fixed_content="┌─"
 
-    # Virtual environment (integrated into the line)
+    # Virtual environment
+    local venv_text=""
     if [[ $(get_config SHOW_VIRTUALENV) == "true" ]]; then
         local venv_info=$(get_virtualenv_info)
         if [[ -n "$venv_info" ]]; then
-            line1_content+="${PROMPT_VENV_COLOR}${venv_info}${RESET}"
-            line1_content+="${PROMPT_SYMBOL_COLOR}─${RESET}"
+            venv_text="${venv_info}─"
+            fixed_content+="${venv_text}"
         fi
     fi
 
-    # Time in parentheses
+    # Time
+    local time_text=""
     if [[ $(get_config SHOW_TIME) == "true" ]]; then
-        line1_content+="${PROMPT_TIME_COLOR}(\\t)${RESET}"
-        line1_content+="${PROMPT_SYMBOL_COLOR}─${RESET}"
+        time_text="($(date +%H:%M:%S))─"
+        fixed_content+="${time_text}"
     fi
 
-    # Exit code if last command failed
+    # Exit code
+    local err_text=""
     if [[ $(get_config SHOW_EXIT_CODE) == "true" ]] && [[ $last_exit_code -ne 0 ]]; then
-        line1_content+="${PROMPT_EXIT_CODE_COLOR}(Err ${last_exit_code})${RESET}"
-        line1_content+="${PROMPT_SYMBOL_COLOR}─${RESET}"
-    fi
-
-    # Current directory in parentheses
-    if [[ $(get_config SHOW_PATH) == "true" ]]; then
-        line1_content+="${PROMPT_SYMBOL_COLOR}(${RESET}"
-        line1_content+="${PROMPT_PATH_COLOR}$(get_prompt_path)${RESET}"
-        line1_content+="${PROMPT_SYMBOL_COLOR})${RESET}"
+        err_text="(Err ${last_exit_code})─"
+        fixed_content+="${err_text}"
     fi
 
     # Git info
+    local git_text=""
     if [[ $(get_config SHOW_GIT) == "true" ]] && is_git_repo; then
         local branch=$(git_branch)
         if [[ -n "$branch" ]]; then
-            line1_content+="${PROMPT_SYMBOL_COLOR}─(${RESET}"
-            line1_content+="${PROMPT_GIT_COLOR}${branch}"
+            git_text="(${branch}"
 
             if [[ $(get_config GIT_SHOW_STATUS) == "true" ]]; then
                 local status=$(git_status_symbols)
                 if [[ -n "$status" ]]; then
-                    line1_content+=" ${PROMPT_GIT_STATUS_COLOR}${status}"
+                    git_text+=" ${status}"
                 fi
             fi
 
-            line1_content+="${RESET}${PROMPT_SYMBOL_COLOR})${RESET}"
+            git_text+=")"
+            fixed_content+="${git_text}"
         fi
     fi
 
-    # Add dynamic separator
-    local separator=$(create_separator_line "$line1_content")
-    line1="${line1_content}${PROMPT_SYMBOL_COLOR}${separator}${RESET}"
+    # Now calculate available space for PWD
+    local term_width=$(get_terminal_width)
+    local fixed_length=${#fixed_content}
+
+    # Get PWD and calculate display
+    local pwd_display=$(get_display_pwd)
+
+    # Available space = terminal width - fixed content - brackets/dashes (8 chars reserved)
+    local available_for_pwd=$((term_width - fixed_length - 8))
+
+    # Ensure minimum space for PWD
+    if [[ $available_for_pwd -lt 20 ]]; then
+        available_for_pwd=20
+    fi
+
+    # Truncate PWD if needed
+    if [[ ${#pwd_display} -gt $available_for_pwd ]]; then
+        pwd_display=$(truncate_path "$pwd_display" $available_for_pwd)
+    fi
+
+    # Calculate separator length
+    local separator_length=$((term_width - fixed_length - ${#pwd_display} - 6))
+    if [[ $separator_length -lt 2 ]]; then
+        separator_length=2
+    fi
+
+    # Build the actual first line with colors
+    line1="${PROMPT_SYMBOL_COLOR}┌─${RESET}"
+
+    # Add each component with colors
+    if [[ -n "$venv_text" ]]; then
+        line1+="${PROMPT_VENV_COLOR}${venv_info}${RESET}${PROMPT_SYMBOL_COLOR}─${RESET}"
+    fi
+
+    if [[ -n "$time_text" ]]; then
+        line1+="${PROMPT_TIME_COLOR}(\\t)${RESET}${PROMPT_SYMBOL_COLOR}─${RESET}"
+    fi
+
+    if [[ -n "$err_text" ]]; then
+        line1+="${PROMPT_EXIT_CODE_COLOR}(Err ${last_exit_code})${RESET}${PROMPT_SYMBOL_COLOR}─${RESET}"
+    fi
+
+    if [[ -n "$git_text" ]]; then
+        line1+="${PROMPT_SYMBOL_COLOR}(${RESET}${PROMPT_GIT_COLOR}${branch}"
+        if [[ -n "$status" ]]; then
+            line1+=" ${PROMPT_GIT_STATUS_COLOR}${status}"
+        fi
+        line1+="${RESET}${PROMPT_SYMBOL_COLOR})${RESET}"
+    fi
+
+    # Add separator
+    local separator=$(printf '─%.0s' $(seq 1 $separator_length))
+    line1+="${PROMPT_SYMBOL_COLOR}${separator}(${RESET}"
+
+    # Add PWD
+    if [[ $(get_config SHOW_PATH) == "true" ]]; then
+        line1+="${PROMPT_PATH_COLOR}${pwd_display}${RESET}"
+        line1+="${PROMPT_SYMBOL_COLOR})──${RESET}"
+    else
+        line1+="${PROMPT_SYMBOL_COLOR})──${RESET}"
+    fi
 
     # Build second line
     line2="${PROMPT_SYMBOL_COLOR}└─${RESET}"
@@ -143,24 +199,22 @@ function build_prompt() {
         line2+="${PROMPT_SYMBOL_COLOR}\$${RESET} "
     fi
 
-    # Set PS1 with newline between lines
+    # Set PS1
     PS1="${line1}\n${line2}"
 }
 
-# Function to enable prompt
+# Rest of functions remain the same...
 function enable_custom_prompt() {
     PROMPT_COMMAND="build_prompt"
     echo "Custom prompt enabled!"
 }
 
-# Function to disable prompt
 function disable_custom_prompt() {
     PROMPT_COMMAND=""
     PS1="\\u@\\h:\\w\\$ "
     echo "Custom prompt disabled. Using default bash prompt."
 }
 
-# Function to preview current settings
 function preview_prompt() {
     local old_ps1="$PS1"
     build_prompt
