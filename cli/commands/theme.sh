@@ -4,17 +4,18 @@
 # Source required functions
 PROMPT_DIR="${HOME}/.custom-prompt"
 if [[ -f "$PROMPT_DIR/loader.sh" ]]; then
-    source "$PROMPT_DIR/loader.sh" 2>/dev/null
+    # Suppress output when loading
+    source "$PROMPT_DIR/loader.sh" 2>/dev/null >&2
 fi
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+# Use plain colors for output
+RED="${RED_PLAIN:-\033[0;31m}"
+GREEN="${GREEN_PLAIN:-\033[0;32m}"
+YELLOW="${YELLOW_PLAIN:-\033[1;33m}"
+BLUE="${BLUE_PLAIN:-\033[0;34m}"
+PURPLE="${PURPLE_PLAIN:-\033[0;35m}"
+CYAN="${CYAN_PLAIN:-\033[0;36m}"
+NC="${NC:-\033[0m}"
 
 # Print functions
 print_info() {
@@ -65,7 +66,7 @@ function theme_list() {
     echo ""
 
     local current_theme=$(get_config THEME 2>/dev/null || echo "default")
-    echo "Current theme: ${GREEN}${current_theme}${NC}"
+    echo -e "Current theme: ${GREEN}${current_theme}${NC}"
 }
 
 # Set theme
@@ -112,7 +113,7 @@ function theme_set() {
 # Show current theme
 function theme_show() {
     local current_theme=$(get_config THEME 2>/dev/null || echo "default")
-    echo "Current theme: ${GREEN}${current_theme}${NC}"
+    echo -e "Current theme: ${GREEN}${current_theme}${NC}"
     echo ""
     theme_preview "$current_theme"
 }
