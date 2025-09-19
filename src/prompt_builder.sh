@@ -56,6 +56,34 @@ function get_display_pwd() {
     echo "$pwd_path"
 }
 
+# Function to get git file status summary
+function get_git_file_status() {
+    if ! is_git_repo; then
+        return
+    fi
+
+    local status_text=""
+    local untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | xargs)
+    local staged=$(git diff --cached --numstat 2>/dev/null | wc -l | xargs)
+    local modified=$(git diff --numstat 2>/dev/null | wc -l | xargs)
+
+    if [[ $staged -gt 0 ]]; then
+        status_text+="↑${staged}"  # Files ready to commit
+    fi
+
+    if [[ $modified -gt 0 ]]; then
+        [[ -n "$status_text" ]] && status_text+=" "
+        status_text+="±${modified}"  # Modified files
+    fi
+
+    if [[ $untracked -gt 0 ]]; then
+        [[ -n "$status_text" ]] && status_text+=" "
+        status_text+="?${untracked}"  # Untracked files
+    fi
+
+    echo "$status_text"
+}
+
 # Function to build the prompt (two-line version)
 function build_prompt() {
     local last_exit_code=$?
@@ -92,18 +120,17 @@ function build_prompt() {
         fixed_content+="${err_text}"
     fi
 
-    # Git info
+    # Git info with "git branch:" prefix
     local git_text=""
     if [[ $(get_config SHOW_GIT) == "true" ]] && is_git_repo; then
         local branch=$(git_branch)
         if [[ -n "$branch" ]]; then
-            git_text="(${branch}"
+            git_text="(git branch: ${branch}"
 
-            if [[ $(get_config GIT_SHOW_STATUS) == "true" ]]; then
-                local status=$(git_status_symbols)
-                if [[ -n "$status" ]]; then
-                    git_text+=" ${status}"
-                fi
+            # Add file status summary
+            local file_status=$(get_git_file_status)
+            if [[ -n "$file_status" ]]; then
+                git_text+=" | ${file_status}"
             fi
 
             git_text+=")"
@@ -153,11 +180,13 @@ function build_prompt() {
         line1+="${PROMPT_EXIT_CODE_COLOR}(Err ${last_exit_code})${RESET}${PROMPT_SYMBOL_COLOR}─${RESET}"
     fi
 
-    if [[ -n "$git_text" ]]; then
-        line1+="${PROMPT_SYMBOL_COLOR}(${RESET}${PROMPT_GIT_COLOR}${branch}"
-        if [[ -n "$status" ]]; then
-            line1+=" ${PROMPT_GIT_STATUS_COLOR}${status}"
+    if [[ -n "$git_text" ]] && is_git_repo; then
+        line1+="${PROMPT_SYMBOL_COLOR}(${RESET}${PROMPT_GIT_COLOR}git branch: ${branch}"
+
+        if [[ -n "$file_status" ]]; then
+            line1+=" ${PROMPT_SYMBOL_COLOR}|${RESET} ${PROMPT_GIT_STATUS_COLOR}${file_status}"
         fi
+
         line1+="${RESET}${PROMPT_SYMBOL_COLOR})${RESET}"
     fi
 

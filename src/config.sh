@@ -14,7 +14,7 @@ DEFAULT_SHOW_TIME="false"
 DEFAULT_SHOW_EXIT_CODE="true"
 DEFAULT_SHOW_VIRTUALENV="true"
 DEFAULT_PATH_STYLE="full"
-DEFAULT_THEME="default"
+DEFAULT_THEME="forest"  # Changed from "default" to "forest"
 DEFAULT_GIT_SHOW_STATUS="true"
 
 # Function to initialize config directory
@@ -47,8 +47,8 @@ SHOW_VIRTUALENV=true
 # Path Style: full, short, or basename
 PATH_STYLE=full
 
-# Theme: default, ocean, forest, minimal
-THEME=default
+# Theme: forest, ocean, classic, minimal, dracula, sunset, matrix, nord
+THEME=forest
 
 # Git Options
 GIT_SHOW_STATUS=true
