@@ -1,5 +1,4 @@
 ## PR Checklist
-- [ ] Changes are under 80 lines
 - [ ] Single purpose/feature per PR
 - [ ] Tests pass (if applicable)
 - [ ] Documentation updated (if needed)
