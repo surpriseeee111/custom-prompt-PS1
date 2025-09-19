@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Main loader script for custom prompt
 
+# Prevent multiple loads
+if [[ -n "$CUSTOM_PROMPT_LOADED" ]]; then
+    return 0
+fi
+export CUSTOM_PROMPT_LOADED=1
+
 # Get the directory where this script is located
 if [[ -n "${BASH_SOURCE[0]}" ]]; then
     PROMPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +24,7 @@ source "$PROMPT_DIR/git_info.sh"
 source "$PROMPT_DIR/git_status.sh"
 source "$PROMPT_DIR/config.sh"
 source "$PROMPT_DIR/color_config.sh"
+source "$PROMPT_DIR/prompt_builder.sh"
 
 # Initialize components
 init_config
@@ -56,4 +63,7 @@ function prompt_info() {
 export -f reload_prompt
 export -f prompt_info
 
-echo "Custom Prompt PS1 loaded! Type 'prompt_info' for status."
+# Only show message if in interactive shell
+if [[ $- == *i* ]]; then
+    echo "Custom Prompt PS1 loaded! Type 'prompt_info' for status."
+fi

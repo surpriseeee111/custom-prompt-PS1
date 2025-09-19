@@ -6,17 +6,20 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT_DIR="${HOME}/.custom-prompt"
 COMMANDS_DIR="${SCRIPT_DIR}/commands"
 
-# Source the prompt functions if installed
+# Source the prompt functions if installed (suppress output)
 if [[ -f "$PROMPT_DIR/loader.sh" ]]; then
+    CUSTOM_PROMPT_LOADED=1  # Prevent message
     source "$PROMPT_DIR/loader.sh" 2>/dev/null
 fi
 
-# Source command files if they exist
+# Source command files if they exist (they will reuse loaded functions)
 if [[ -f "$COMMANDS_DIR/theme.sh" ]]; then
+    CUSTOM_PROMPT_LOADED=1  # Ensure no message
     source "$COMMANDS_DIR/theme.sh"
 fi
 
 if [[ -f "$COMMANDS_DIR/config.sh" ]]; then
+    CUSTOM_PROMPT_LOADED=1  # Ensure no message
     source "$COMMANDS_DIR/config.sh"
 fi
 
