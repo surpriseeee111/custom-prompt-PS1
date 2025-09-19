@@ -22,6 +22,7 @@ source "$PROMPT_DIR/colors.sh"
 source "$PROMPT_DIR/os_detect.sh"
 source "$PROMPT_DIR/git_info.sh"
 source "$PROMPT_DIR/git_status.sh"
+source "$PROMPT_DIR/virtualenv.sh"
 source "$PROMPT_DIR/config.sh"
 source "$PROMPT_DIR/color_config.sh"
 source "$PROMPT_DIR/prompt_builder.sh"
@@ -49,7 +50,13 @@ function prompt_info() {
     echo "Show Host: $(get_config SHOW_HOST)"
     echo "Show Path: $(get_config SHOW_PATH)"
     echo "Show Time: $(get_config SHOW_TIME)"
+    echo "Show Virtualenv: $(get_config SHOW_VIRTUALENV)"
     echo "OS Type: $OS_TYPE"
+
+    local venv=$(get_virtualenv_info)
+    if [[ -n "$venv" ]]; then
+        echo "Virtual Env: $venv"
+    fi
 
     if is_git_repo; then
         echo ""
