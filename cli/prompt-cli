@@ -207,6 +207,15 @@ case "$1" in
     help|--help|-h|"")
         show_help
         ;;
+    update)
+        if [[ -f "$COMMANDS_DIR/update.sh" ]]; then
+            source "$COMMANDS_DIR/update.sh"
+            update_prompt
+        else
+            print_warning "Update command not found"
+            print_info "Manually update by running install.sh from the repository"
+        fi
+        ;;
     *)
         print_error "Unknown command: $1"
         echo "Run: prompt-cli help"
