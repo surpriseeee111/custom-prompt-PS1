@@ -69,34 +69,6 @@ main() {
     # Make scripts executable
     chmod +x "$INSTALL_DIR"/*.sh
 
-    # Install CLI to user's bin directory
-    print_info "Installing CLI command..."
-    mkdir -p "$BIN_DIR"
-
-    # Create a wrapper script for prompt-cli
-    cat > "$BIN_DIR/prompt-cli" << 'EOF'
-#!/usr/bin/env bash
-# Wrapper for prompt-cli command
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")" 2>/dev/null || dirname "$0")"
-CLI_PATH="${HOME}/.custom-prompt/cli/prompt-cli"
-
-# Check if the actual CLI exists
-if [[ ! -f "$CLI_PATH" ]]; then
-    # Try to find it relative to installation
-    CLI_PATH="$(dirname "$SCRIPT_DIR")/cli/prompt-cli"
-fi
-
-if [[ -f "$CLI_PATH" ]]; then
-    exec "$CLI_PATH" "$@"
-else
-    echo "Error: prompt-cli not found at $CLI_PATH"
-    echo "Please reinstall Custom Prompt PS1"
-    exit 1
-fi
-EOF
-
-    chmod +x "$BIN_DIR/prompt-cli"
-
     # Copy CLI files
     if [[ -d "cli" ]]; then
         print_info "Installing CLI components..."
@@ -104,6 +76,11 @@ EOF
         chmod +x "$INSTALL_DIR/cli/prompt-cli"
         chmod +x "$INSTALL_DIR/cli/commands"/*.sh 2>/dev/null || true
     fi
+
+    # Create symlink for CLI in local bin
+    mkdir -p "$BIN_DIR"
+    ln -sf "$INSTALL_DIR/cli/prompt-cli" "$BIN_DIR/prompt-cli"
+    print_info "Created symlink for prompt-cli in $BIN_DIR"
 
     # Add to shell RC file
     SHELL_TYPE=$(detect_shell)
@@ -156,18 +133,11 @@ EOF
     echo "  1. Restart your terminal, or"
     echo "  2. Run: source $RC_FILE"
     echo ""
-    echo "CLI Commands now available globally:"
+    echo "CLI Commands now available:"
     echo "  prompt-cli config list    - View configuration"
     echo "  prompt-cli theme list     - View themes"
     echo "  prompt-cli theme set ocean - Change theme"
     echo "  prompt-cli status         - Show prompt status"
-    echo "  prompt-cli help          - Show all commands"
-    echo ""
-    echo "Quick commands (available in shell):"
-    echo "  prompt_info              - Show current configuration"
-    echo "  enable_custom_prompt     - Enable the custom prompt"
-    echo "  disable_custom_prompt    - Disable the custom prompt"
-    echo "  reload_prompt           - Reload configuration"
     echo ""
     print_info "Enjoy your new prompt!"
 }
