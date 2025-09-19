@@ -5,7 +5,7 @@
 export PROMPT_CONFIG_DIR="${HOME}/.config/custom-prompt"
 export PROMPT_CONFIG_FILE="${PROMPT_CONFIG_DIR}/config"
 
-# Default configuration values (using regular variables for compatibility)
+# Default configuration values
 DEFAULT_SHOW_GIT="true"
 DEFAULT_SHOW_USER="true"
 DEFAULT_SHOW_HOST="true"
@@ -14,7 +14,7 @@ DEFAULT_SHOW_TIME="false"
 DEFAULT_SHOW_EXIT_CODE="true"
 DEFAULT_SHOW_VIRTUALENV="true"
 DEFAULT_PATH_STYLE="full"
-DEFAULT_THEME="forest"  # Changed from "default" to "forest"
+DEFAULT_THEME="forest"
 DEFAULT_GIT_SHOW_STATUS="true"
 
 # Function to initialize config directory
@@ -25,7 +25,6 @@ function init_config() {
 
     if [[ ! -f "$PROMPT_CONFIG_FILE" ]]; then
         create_default_config
-        echo "Created default config at: $PROMPT_CONFIG_FILE"
     fi
 }
 
