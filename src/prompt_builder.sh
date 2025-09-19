@@ -97,8 +97,12 @@ function build_prompt() {
         prompt+=" ${PROMPT_EXIT_CODE_COLOR}[${last_exit_code}]${RESET}"
     fi
 
-    # Prompt symbol ($ for user, # for root)
-    prompt+=" ${PROMPT_SYMBOL_COLOR}\\\\$${RESET} "
+    # Prompt symbol ($ for user, # for root) - using simple dollar sign
+    if [[ $EUID -eq 0 ]]; then
+        prompt+=" ${PROMPT_SYMBOL_COLOR}#${RESET} "
+    else
+        prompt+=" ${PROMPT_SYMBOL_COLOR}\$${RESET} "
+    fi
 
     # Set the PS1
     PS1="$prompt"
