@@ -98,7 +98,7 @@ function build_prompt() {
     fi
 
     # Prompt symbol ($ for user, # for root)
-    prompt+=" ${PROMPT_SYMBOL_COLOR}\\$${RESET} "
+    prompt+=" ${PROMPT_SYMBOL_COLOR}\\\\$${RESET} "
 
     # Set the PS1
     PS1="$prompt"
