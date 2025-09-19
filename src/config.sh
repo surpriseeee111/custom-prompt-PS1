@@ -5,18 +5,16 @@
 export PROMPT_CONFIG_DIR="${HOME}/.config/custom-prompt"
 export PROMPT_CONFIG_FILE="${PROMPT_CONFIG_DIR}/config"
 
-# Default configuration values
-declare -A DEFAULT_CONFIG=(
-    ["SHOW_GIT"]="true"
-    ["SHOW_USER"]="true"
-    ["SHOW_HOST"]="true"
-    ["SHOW_PATH"]="true"
-    ["SHOW_TIME"]="false"
-    ["SHOW_EXIT_CODE"]="true"
-    ["PATH_STYLE"]="full"  # full, short, or basename
-    ["THEME"]="default"
-    ["GIT_SHOW_STATUS"]="true"
-)
+# Default configuration values (using regular variables for compatibility)
+DEFAULT_SHOW_GIT="true"
+DEFAULT_SHOW_USER="true"
+DEFAULT_SHOW_HOST="true"
+DEFAULT_SHOW_PATH="true"
+DEFAULT_SHOW_TIME="false"
+DEFAULT_SHOW_EXIT_CODE="true"
+DEFAULT_PATH_STYLE="full"
+DEFAULT_THEME="default"
+DEFAULT_GIT_SHOW_STATUS="true"
 
 # Function to initialize config directory
 function init_config() {
@@ -32,7 +30,7 @@ function init_config() {
 
 # Function to create default configuration file
 function create_default_config() {
-    cat > "$PROMPT_CONFIG_FILE" << 'EOF'
+    cat > "$PROMPT_CONFIG_FILE" << EOF
 # Custom Prompt Configuration
 # Generated on: $(date)
 
@@ -58,9 +56,15 @@ EOF
 # Function to load configuration
 function load_config() {
     # First set defaults
-    for key in "${!DEFAULT_CONFIG[@]}"; do
-        export "PROMPT_${key}=${DEFAULT_CONFIG[$key]}"
-    done
+    export PROMPT_SHOW_GIT="${DEFAULT_SHOW_GIT}"
+    export PROMPT_SHOW_USER="${DEFAULT_SHOW_USER}"
+    export PROMPT_SHOW_HOST="${DEFAULT_SHOW_HOST}"
+    export PROMPT_SHOW_PATH="${DEFAULT_SHOW_PATH}"
+    export PROMPT_SHOW_TIME="${DEFAULT_SHOW_TIME}"
+    export PROMPT_SHOW_EXIT_CODE="${DEFAULT_SHOW_EXIT_CODE}"
+    export PROMPT_PATH_STYLE="${DEFAULT_PATH_STYLE}"
+    export PROMPT_THEME="${DEFAULT_THEME}"
+    export PROMPT_GIT_SHOW_STATUS="${DEFAULT_GIT_SHOW_STATUS}"
 
     # Then load from file if exists
     if [[ -f "$PROMPT_CONFIG_FILE" ]]; then
@@ -94,7 +98,11 @@ function set_config() {
     if [[ -f "$PROMPT_CONFIG_FILE" ]]; then
         # Update existing key or add new one
         if grep -q "^${key}=" "$PROMPT_CONFIG_FILE"; then
-            sed -i.bak "s/^${key}=.*/${key}=${value}/" "$PROMPT_CONFIG_FILE"
+            if [[ "$(uname)" == "Darwin" ]]; then
+                sed -i '' "s/^${key}=.*/${key}=${value}/" "$PROMPT_CONFIG_FILE"
+            else
+                sed -i "s/^${key}=.*/${key}=${value}/" "$PROMPT_CONFIG_FILE"
+            fi
         else
             echo "${key}=${value}" >> "$PROMPT_CONFIG_FILE"
         fi
