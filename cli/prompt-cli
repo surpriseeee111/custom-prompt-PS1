@@ -200,12 +200,25 @@ case "$1" in
                 fi
                 ;;
             set)
-                if [[ -n "$1" ]] && [[ -n "$2" ]]; then
-                    set_config "$1" "$2"
-                    print_info "Set $1 = $2"
-                    echo "Run 'reload_prompt' to apply changes"
+                if [[ -n "$1" ]]; then
+                    valid_themes="forest ocean classic minimal dracula sunset matrix nord default"
+                    if [[ " $valid_themes " =~ " $1 " ]]; then
+                        # Map default to forest
+                        theme="$1"
+                        [[ "$theme" == "default" ]] && theme="forest"
+
+                        set_config THEME "$theme"
+                        load_theme_colors "$theme"
+                        print_info "Theme set to: $theme"
+                        echo "Theme applied!"
+                        echo ""
+                        echo "Press Enter to see the new theme..."
+                    else
+                        print_error "Unknown theme: $1"
+                        echo "Available themes: forest, ocean, classic, minimal, dracula, sunset, matrix, nord"
+                    fi
                 else
-                    print_error "Usage: prompt-cli config set <key> <value>"
+                    print_error "Usage: prompt-cli theme set <theme>"
                 fi
                 ;;
             *)

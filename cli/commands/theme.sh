@@ -4,7 +4,6 @@
 # Source required functions
 PROMPT_DIR="${HOME}/.custom-prompt"
 if [[ -f "$PROMPT_DIR/loader.sh" ]]; then
-    # Suppress output when loading
     source "$PROMPT_DIR/loader.sh" 2>/dev/null >&2
 fi
 
@@ -40,11 +39,14 @@ Subcommands:
   preview <theme>   Preview a theme without applying
 
 Available Themes:
-  default   - Classic colors (green/yellow/blue)
+  forest    - Green nature theme (default)
   ocean     - Blue/cyan theme
-  forest    - Green theme
+  classic   - Traditional colors
   minimal   - Monochrome
   dracula   - Purple/dark theme
+  sunset    - Warm red/yellow theme
+  matrix    - All green theme
+  nord      - Nordic blue theme
 
 Examples:
   prompt-cli theme list
@@ -58,14 +60,17 @@ EOF
 function theme_list() {
     echo "Available themes:"
     echo ""
-    echo -e "  ${GREEN}●${NC} default  - Classic colors"
+    echo -e "  ${GREEN}●${NC} forest   - Green nature theme (default)"
     echo -e "  ${CYAN}●${NC} ocean    - Blue/cyan theme"
-    echo -e "  ${GREEN}●${NC} forest   - Green nature theme"
-    echo -e "  ${NC}●${NC} minimal  - Monochrome/simple"
+    echo -e "  ${YELLOW}●${NC} classic  - Traditional colors"
+    echo -e "  ${NC}●${NC} minimal  - Monochrome"
     echo -e "  ${PURPLE}●${NC} dracula  - Purple/dark theme"
+    echo -e "  ${RED}●${NC} sunset   - Warm red/yellow theme"
+    echo -e "  ${GREEN}●${NC} matrix   - All green theme"
+    echo -e "  ${BLUE}●${NC} nord     - Nordic blue theme"
     echo ""
 
-    local current_theme=$(get_config THEME 2>/dev/null || echo "default")
+    local current_theme=$(get_config THEME 2>/dev/null || echo "forest")
     echo -e "Current theme: ${GREEN}${current_theme}${NC}"
 }
 
@@ -82,11 +87,13 @@ function theme_set() {
 
     # Validate theme
     case "$theme" in
-        default|ocean|forest|minimal|dracula)
+        forest|ocean|classic|minimal|dracula|sunset|matrix|nord|default)
+            # Map default to forest
+            [[ "$theme" == "default" ]] && theme="forest"
+
             if type set_config &>/dev/null; then
                 set_config THEME "$theme"
 
-                # Reload theme colors
                 if type load_theme_colors &>/dev/null; then
                     load_theme_colors "$theme"
                 fi
@@ -94,7 +101,6 @@ function theme_set() {
                 print_info "Theme set to: $theme"
                 echo "Theme will apply to new prompt lines"
 
-                # Show preview
                 echo ""
                 theme_preview "$theme"
             else
@@ -104,7 +110,7 @@ function theme_set() {
             ;;
         *)
             print_error "Unknown theme: $theme"
-            echo "Available themes: default, ocean, forest, minimal, dracula"
+            echo "Available themes: forest, ocean, classic, minimal, dracula, sunset, matrix, nord"
             return 1
             ;;
     esac
@@ -112,47 +118,18 @@ function theme_set() {
 
 # Show current theme
 function theme_show() {
-    local current_theme=$(get_config THEME 2>/dev/null || echo "default")
+    local current_theme=$(get_config THEME 2>/dev/null || echo "forest")
     echo -e "Current theme: ${GREEN}${current_theme}${NC}"
     echo ""
     theme_preview "$current_theme"
 }
 
-# Preview theme
+# Preview theme (simplified)
 function theme_preview() {
-    local theme="${1:-default}"
-
-    # Check if theme exists
-    case "$theme" in
-        default|ocean|forest|minimal|dracula)
-            ;;
-        *)
-            print_error "Unknown theme: $theme"
-            return 1
-            ;;
-    esac
+    local theme="${1:-forest}"
 
     echo "Preview of '${theme}' theme:"
-    echo ""
-
-    # Create sample prompt based on theme
-    case "$theme" in
-        default)
-            echo -e "${GREEN}user${NC}@${YELLOW}hostname${NC}:${BLUE}~/projects${NC} ${CYAN}(main)${NC} $"
-            ;;
-        ocean)
-            echo -e "${CYAN}user${NC}@${BLUE}hostname${NC}:${BLUE}~/projects${NC} ${GREEN}(main)${NC} $"
-            ;;
-        forest)
-            echo -e "${GREEN}user${NC}@${GREEN}hostname${NC}:${YELLOW}~/projects${NC} ${CYAN}(main)${NC} $"
-            ;;
-        minimal)
-            echo -e "user@hostname:~/projects (main) $"
-            ;;
-        dracula)
-            echo -e "${PURPLE}user${NC}@${CYAN}hostname${NC}:${GREEN}~/projects${NC} ${YELLOW}(main)${NC} $"
-            ;;
-    esac
+    echo "User@Host:~/path (git branch: main | ↑2 ±1) $"
 }
 
 # Main theme command handler

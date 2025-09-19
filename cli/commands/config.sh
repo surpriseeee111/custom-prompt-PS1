@@ -161,9 +161,10 @@ function config_set() {
             fi
             ;;
         THEME)
-            if [[ "$value" != "default" ]] && [[ "$value" != "ocean" ]] && [[ "$value" != "forest" ]] && [[ "$value" != "minimal" ]] && [[ "$value" != "dracula" ]]; then
+            valid_themes="forest ocean classic minimal dracula sunset matrix nord"
+            if [[ ! " $valid_themes " =~ " $value " ]]; then
                 print_error "Unknown theme: $value"
-                echo "Available themes: default, ocean, forest, minimal, dracula"
+                echo "Available themes: $valid_themes"
                 return 1
             fi
             ;;
